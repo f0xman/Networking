@@ -44,12 +44,23 @@ public extension NetworkingClient {
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
+    
+    // Array version
+    func post<T: NetworkingJSONDecodable>(_ route: String,
+                                          params: Params = Params(),
+                                          keypath: String? = nil) -> AnyPublisher<T, Error> {
+        return post(route, params: params)
+            .tryMap { json -> T in try NetworkingParser().toModel(json, keypath: keypath) }
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
 
     func put<T: NetworkingJSONDecodable>(_ route: String,
                                          params: Params = Params(),
-                                         keypath: String? = nil) -> AnyPublisher<T, Error> {
+                                         keypath: String? = nil) -> AnyPublisher<[T], Error> {
+        let keypath = keypath ?? defaultCollectionParsingKeyPath
         return put(route, params: params)
-            .tryMap { json -> T in try NetworkingParser().toModel(json, keypath: keypath) }
+            .tryMap { json -> [T] in try NetworkingParser().toModel(json, keypath: keypath) }
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
